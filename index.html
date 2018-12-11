@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WEB1 - Welcome</title>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <input type="button" id="googleAuthBtn" value="checking..." />
+    <p id="login-status"></p>
+    <h1><a href="index.html">WEB</a></h1>
+    <input
+      id="night_day"
+      type="button"
+      value="night"
+      onclick="
+    nightDayHandler(this);
+  "
+    />
+    <ol>
+      <li><a href="1.html">HTML</a></li>
+      <li><a href="2.html">CSS</a></li>
+      <li><a href="3.html">JavaScript</a></li>
+    </ol>
+    <h2>WEB</h2>
+    <p>
+      The World Wide Web (abbreviated WWW or the Web) is an information space where documents and
+      other web resources are identified by Uniform Resource Locators (URLs), interlinked by
+      hypertext links, and can be accessed via the Internet.[1] English scientist Tim Berners-Lee
+      invented the World Wide Web in 1989. He wrote the first web browser computer program in 1990
+      while employed at CERN in Switzerland.[2][3] The Web browser was released outside of CERN in
+      1991, first to other research institutions starting in January 1991 and to the general public
+      on the Internet in August 1991.
+    </p>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="colors.js"></script>
+    <script src="https://apis.google.com/js/platform.js?onload=init" async defer></script>
+    <script>
+      function init() {
+        console.log("init()");
+
+        gapi.load("auth2", function() {
+          // Ready.
+          console.log("gapi.load('auth2') => auth2 library has been loaded.");
+
+          gapi.auth2
+            .init({
+              client_id: "562276999307-mnd70esdnn1ntfe35kvfbq6f6er4mtgh.apps.googleusercontent.com"
+            })
+            .then(onInit, onError);
+        });
+      }
+      function onInit() {
+        // onInit()
+        // instance of GoogleAuth class
+        console.log("onInit()");
+
+        let googleAuth = gapi.auth2.getAuthInstance();
+        console.log("GoogleAuth instance =>", googleAuth);
+
+        // instantiate googleAuthBtn based on whether the current user is currently signed in.
+        let googleAuthBtn = $("#googleAuthBtn");
+        let isSignedIn = googleAuth.isSignedIn.get();
+        updateGoogleAuthBtn(googleAuth, isSignedIn, googleAuthBtn);
+        updateSignedInStatus(googleAuth, isSignedIn);
+
+        // listen for changes in sign-in state.
+        googleAuth.isSignedIn.listen(function(result) {
+          updateGoogleAuthBtn(googleAuth, result, googleAuthBtn);
+          updateSignedInStatus(googleAuth, result);
+        });
+
+        // display signed in message
+        if (googleAuth.isSignedIn.get()) {
+          console.log("googleAuth.currentUser =>", googleAuth.currentUser);
+          let userName = googleAuth.currentUser
+            .get()
+            .getBasicProfile()
+            .getName();
+          $("#login-status").text(`"${userName}" user signed in`);
+        } else {
+          // console.log("googleAuth.currentUser =>", googleAuth.currentUser);
+          $("#login-status").text("Signed Out");
+        }
+      }
+      function onError(err) {
+        // onError()
+        console.log("onError() =>", err);
+      }
+      /*
+        update DOM element (id="googleAuthBtn")
+        in accrodance with signed in state
+      */
+      // googleAuth: instance of GoogleAuth class
+      // isSignedIn: boolean
+      // googleAuthBtn: DOM button element
+      function updateGoogleAuthBtn(googleAuth, isSignedIn, googleAuthBtn) {
+        console.log("singed in? =>", isSignedIn);
+        if (isSignedIn) {
+          googleAuthBtn
+            .val("log out")
+            .off()
+            .on("click", function() {
+              googleAuth
+                .signOut()
+                .then(res => {
+                  console.log("singOut()");
+                })
+                .catch(err => {
+                  console.log(err);
+                });
+            });
+        } else {
+          googleAuthBtn
+            .val("log in")
+            .off()
+            .on("click", function() {
+              googleAuth
+                .signIn({
+                  prompt: "consent"
+                })
+                .then(user => {
+                  console.log("singIn()");
+
+                  userProfile = user.getBasicProfile();
+                  console.log("Google User Basic Profile", userProfile);
+                })
+                .catch(err => {
+                  console.log(err);
+                });
+            });
+        }
+      }
+      /*
+        update DOM element (id="login-status")
+        in accrodance with signed in state
+      */
+      // googleAuth: instance of GoogleAuth class
+      // isSignedIn: boolean
+      // googleAuthBtn: DOM button element
+      function updateSignedInStatus(googleAuth, isSignedIn) {
+        if (isSignedIn) {
+          console.log("googleAuth.currentUser =>", googleAuth.currentUser);
+          let userName = googleAuth.currentUser
+            .get()
+            .getBasicProfile()
+            .getName();
+          $("#login-status").text(`"${userName}" user signed in`);
+        } else {
+          // console.log("googleAuth.currentUser =>", googleAuth.currentUser);
+          $("#login-status").text("Signed Out");
+        }
+      }
+    </script>
+  </body>
+</html>
